@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+
+    :root {
+      --bs-fitflex-primary: #20639B; /* a deep blue */
+      --bs-fitflex-secondary: #3CAEA3; /* a sea green */
+      --bs-fitflex-accent: #F6D55C; /* a vibrant yellow */
+      --bs-fitflex-dark: #173F5F; /* a dark navy blue */
+      --bs-fitflex-light: #EDF5E1; /* a light mint green */
+      --bs-fitflex-info: #64B3D8; /* a sky blue */
+      --bs-fitflex-success: #6CBF84; /* a medium green */
+      --bs-fitflex-warning: #F49917; /* an amber */
+      --bs-fitflex-danger: #D33F49; /* a reddish-maroon */
+      --bs-fitflex-light-contrast: #FFFFFF; /* a pure white */
+      --bs-fitflex-dark-contrast: #000000; /* a pure black */
+      --bs-accordion-active-bg: #F2F2F2; /* a light grey for active accordion sections */
+      --bs-fitflex-text-primary: #f8f9fa;
+    }
+
+
+    /* Example usage */
+    .bg-fitflex-primary {
+      background-color: var(--bs-fitflex-primary);
+    }
+
+    .text-fitflex-primary {
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .bg-fitflex-secondary {
+      background-color: var(--bs-fitflex-secondary);
+    }
+
+    .text-fitflex-secondary {
+      color: var(--bs-fitflex-secondary);
+    }
+
+    .bg-fitflex-accent {
+      background-color: var(--bs-fitflex-accent);
+    }
+
+    .text-fitflex-accent {
+      color: var(--bs-fitflex-accent);
+    }
+
+    .bg-fitflex-dark {
+      background-color: var(--bs-fitflex-dark);
+    }
+
+    .text-fitflex-dark {
+      color: var(--bs-fitflex-dark);
+    }
+
+    .bg-fitflex-light {
+      background-color: var(--bs-fitflex-light);
+    }
+
+    .text-fitflex-light {
+      color: var(--bs-fitflex-light);
+    }
+
+    /* Custom button styles */
+    .btn-fitflex-primary {
+      background-color: var(--bs-fitflex-primary);
+      border-color: var(--bs-fitflex-primary);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .btn-fitflex-primary:hover {
+      background-color: darken(var(--bs-fitflex-primary), 10%);
+      border-color: darken(var(--bs-fitflex-primary), 10%);
+    }
+
+    .btn-fitflex-secondary {
+      background-color: var(--bs-fitflex-secondary);
+      border-color: var(--bs-fitflex-secondary);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .btn-fitflex-secondary:hover {
+      background-color: darken(var(--bs-fitflex-secondary), 10%);
+      border-color: darken(var(--bs-fitflex-secondary), 10%);
+    }
+
+    .btn-fitflex-info {
+      background-color: var(--bs-fitflex-info);
+      border-color: var(--bs-fitflex-info);
+    }
+
+    .btn-fitflex-info:hover {
+      background-color: darken(var(--bs-fitflex-info), 10%);
+      border-color: darken(var(--bs-fitflex-info), 10%);
+    }
+
+    .btn-fitflex-success {
+      background-color: var(--bs-fitflex-success);
+      border-color: var(--bs-fitflex-success);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .btn-fitflex-success:hover {
+      background-color: darken(var(--bs-fitflex-success), 10%);
+      border-color: darken(var(--bs-fitflex-success), 10%);
+    }
+
+
+    /* Custom accordion styles */
+    .accordion-fitflex .accordion-header {
+      background-color: var(--bs-fitflex-accent);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .accordion-fitflex .accordion-item {
+      background-color: var(--bs-fitflex-accent);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .accordion-fitflex .accordion-header:hover {
+      background-color: darken(var(--bs-fitflex-primary), 10%);
+    }
+
+    .accordion-fitflex .accordion-header button:not(.collapsed) {
+      background-color: var(--bs-fitflex-warning);
+      color: #FFFFFF;
+    }
+
+    .accordion-fitflex .accordion-body {
+      background-color: var(--bs-fitflex-info);
+      color: var(--bs-fitflex-text-info
+      );
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+
+    .category-accordion-item {
+      background-color: #f0f0f0; /* Choose a color that suits your design */
+    }
+
+    /* Helper function to darken colors */
+    function darken(color, percent) {
+      return color.mix(black, percent);
+    }
+
+    /* Custom table styles */
+    .table-fitflex {
+      background-color: var(--bs-fitflex-success);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .table-fitflex thead {
+      background-color: var(--bs-fitflex-dark);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .table-fitflex tbody tr:hover {
+      background-color: var(--bs-fitflex-info);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    /* Custom list styles */
+    .list-group-fitflex .list-group-item {
+      background-color: var(--bs-fitflex-secondary);
+      color: var(--bs-fitflex-text-secondary);
+    }
+
+    .list-group-fitflex .list-group-item:hover {
+      background-color: var(--bs-fitflex-primary);
+      color: var(--bs-fitflex-text-primary);
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: #6c757d;
+    }
+
+    /* Custom Bootstrap Button Colors */
+
+    .btn-fitflex-primary {
+      background-color: var(--bs-fitflex-primary);
+      border-color: var(--bs-fitflex-primary);
+    }
+
+    .btn-fitflex-secondary {
+      background-color: var(--bs-fitflex-secondary);
+      border-color: var(--bs-fitflex-secondary);
+    }
+
+    .btn-fitflex-info {
+      background-color: var(--bs-fitflex-info);
+      border-color: var(--bs-fitflex-info);
+    }
+
+    .btn-fitflex-success {
+      background-color: var(--bs-fitflex-success);
+      border-color: var(--bs-fitflex-success);
+    }
+
+    .btn-fitflex-warning {
+      background-color: var(--bs-fitflex-warning);
+      border-color: var(--bs-fitflex-warning);
+    }
+
+    .btn-fitflex-danger {
+      background-color: var(--bs-fitflex-danger);
+      border-color: var(--bs-fitflex-danger);
+    }
+
+    .btn-fitflex-light-contrast {
+      background-color: var(--bs-fitflex-light-contrast);
+      border-color: var(--bs-fitflex-light-contrast);
+    }
+
+    .btn-fitflex-dark-contrast {
+      background-color: var(--bs-fitflex-dark-contrast);
+      border-color: var(--bs-fitflex-dark-contrast);
+    }
+
+    .chart-iframe {
+      height: 100%;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Hover, Active, Focus and Outline States */
+
+    /* .btn-fitflex-primary:hover,
+    .btn-fitflex-secondary:hover,
+    .btn-fitflex-info:hover,
+    .btn-fitflex-success:hover,
+    .btn-fitflex-warning:hover,
+    .btn-fitflex-danger:hover,
+    .btn-fitflex-light-contrast:hover,
+    .btn-fitflex-dark-contrast:hover {
+      filter: brightness(85%);
+    }
+
+    .btn-fitflex-primary:focus,
+    .btn-fitflex-secondary:focus,
+    .btn-fitflex-info:focus,
+    .btn-fitflex-success:focus,
+    .btn-fitflex-warning:focus,
+    .btn-fitflex-danger:focus,
+    .btn-fitflex-light-contrast:focus,
+    .btn-fitflex-dark-contrast:focus {
+      box-shadow: 0 0 0 0.25rem rgba(var(--bs-fitflex-primary), 0.5);
+    }
+
+    .btn-fitflex-primary-outline,
+    .btn-fitflex-secondary-outline,
+    .btn-fitflex-info-outline,
+    .btn-fitflex-success-outline,
+    .btn-fitflex-warning-outline,
+    .btn-fitflex-danger-outline,
+    .btn-fitflex-light-contrast-outline,
+    .btn-fitflex-dark-contrast-outline {
+      background-color: transparent;
+      border-color: currentColor;
+      color: inherit;
+    }
+
+    .btn-fitflex-primary-outline:hover,
+    .btn-fitflex-secondary-outline:hover,
+    .btn-fitflex-info-outline:hover,
+    .btn-fitflex-success-outline:hover,
+    .btn-fitflex-warning-outline:hover,
+    .btn-fitflex-danger-outline:hover,
+    .btn-fitflex-light-contrast-outline:hover,
+    .btn-fitflex-dark-contrast-outline:hover {
+      background-color: currentColor;
+      color: var(--bs-fitflex-light);
+    } */
+
+
+  </style>
+</head>
+
+<body>
+
+</body>
+
+</html>
