@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <!-- TO DO complete exercise data -->
+  <!-- TO DO graph showing exercises completed per day -->
+  <!-- TO DO add optional sorting to accordion -->
+  <!-- TO DO Try Navbar -->
+  <!-- TO DO try github pages -->
+  <!-- TO DO Theme -->
+  <!-- TO DO Optimisation -->
+  <!-- TO DO change chart axis lables -->
+  <script>
+    // DOM elements
+    const workoutGenerator = document.getElementById("workoutGenerator");
+    const progressTracking = document.getElementById("progressTracking");
+    const workoutHeading = document.getElementById("workoutHeading");
+    let exercises = []; // Global variable to store the exercises
+    let categories = []; // Global variable to store the categories
+    let exerciseCategoryMapping = {}; // Global variable to store the exercise to category mapping
+    let numberOfExercises = 0;
+
+    function loadCategories() {
+      return new Promise((resolve) => {
+        google.script.run.withSuccessHandler((categories) => {
+          handleCategories(categories);
+          resolve();
+        }).fetchCategories();
+      });
+    }
+
+    function loadExercises() {
+      return new Promise((resolve) => {
+        google.script.run.withSuccessHandler((exercises) => {
+          handleExercises(exercises);
+          resolve();
+        }).fetchExercises();
+      });
+    }
+
+    function handleCategories(fetchedCategories) {
+      categories = fetchedCategories;
+      const categoryAccordion = document.getElementById("categoryAccordion");
+      categories.forEach((category) => {
+        const categoryId = category.categoryId;
+        const categoryTitle = category.categoryName;
+        const contentId = `collapse${categoryId}`;
+        // Create the accordion item
+        const accordionItem = document.createElement("div");
+        accordionItem.className = "accordion-fitflex accordion-item border-0 category-accordion-item";
+        // Create the accordion header
+        const accordionHeader = document.createElement("h1");
+        accordionHeader.className = "accordion-fitflex accordion-header bg-fitflex-secondary text-fitflex-light-contrast";
+        accordionHeader.id = `heading${categoryId}`;
+        // Create the accordion button
+        const accordionButton = document.createElement("button");
+        accordionButton.className = "accordion-fitflex accordion-button collapsed h1";
+        accordionButton.type = "button";
+        accordionButton.setAttribute("data-bs-toggle", "collapse");
+        accordionButton.setAttribute("data-bs-target", `#${contentId}`);
+        accordionButton.setAttribute("aria-expanded", "false");
+        accordionButton.setAttribute("aria-controls", contentId);
+        accordionButton.innerText = categoryTitle;
+        // Create the accordion collapse
+        const accordionCollapse = document.createElement("div");
+        accordionCollapse.className = "accordion-fitflex accordion-collapse collapse";
+        accordionCollapse.id = contentId;
+        accordionCollapse.setAttribute("aria-labelledby", `heading${categoryId}`);
+        accordionCollapse.setAttribute("data-bs-parent", "#categoryAccordion");
+        // Create the accordion body
+        const accordionBody = document.createElement("div");
+        accordionBody.className = "accordion-fitflex accordion-body bg-fitflex-light text-fitflex-dark";
+        // Build the accordion item structure
+        accordionHeader.appendChild(accordionButton);
+        accordionItem.appendChild(accordionHeader);
+        accordionItem.appendChild(accordionCollapse);
+        accordionCollapse.appendChild(accordionBody);
+        categoryAccordion.appendChild(accordionItem);
+      });
+        const categorySelect = document.getElementById("categorySelect");
+        categories.forEach((category) => {
+          const categoryId = category.categoryId;
+          const categoryTitle = category.categoryName;
+          const option = document.createElement("option");
+          option.value = categoryId;
+          option.innerText = categoryTitle;
+          categorySelect.appendChild(option);
+        });
+      handleExercises(exercises);
+    }
+
+    function populateCategoryOptions() {
+      const exerciseCategorySelect = document.getElementById("exerciseCategory");
+      
+      // Clear the select options
+      exerciseCategorySelect.innerHTML = "";
+
+      // Loop through the categories and create an option for each category
+      categories.forEach((category) => {
+        const option = document.createElement("option");
+        option.value = category.categoryId;
+        option.textContent = category.categoryName;
+        exerciseCategorySelect.appendChild(option);
+      });
+    }
+        
+    function handleExercises(fetchedExercises) {
+      exercises = fetchedExercises; // Set the global exercises variable
+      const categories = {};
+      exercises.forEach((exercise) => {
+        // Create or update the category object in the categories dictionary
+        if (!categories[exercise.categoryId]) {
+          categories[exercise.categoryId] = {
+            exercises: [],
+          };
+        }
+        categories[exercise.categoryId].exercises.push(exercise);
+      });
+      // Loop through categories and create the accordions for exercises
+      for (const categoryId in categories) {
+        const categoryExercises = categories[categoryId].exercises;
+        const categoryContentId = `collapse${categoryId}`;
+        const categoryContent = document.getElementById(categoryContentId);
+        // Create an accordion for the exercises in the current category
+        const exercisesAccordion = document.createElement("div");
+        exercisesAccordion.className = "accordion-fitflex accordion";
+        exercisesAccordion.id = `exercisesAccordion${categoryId}`;
+        // Loop through the exercises and create the accordion items
+        categoryExercises.forEach((exercise) => {
+          const exerciseItemId = `exercise${exercise.exerciseId}`;
+          // Create the accordion item
+          const accordionItem = document.createElement("div");
+          accordionItem.className = "accordion-fitflex accordion-item border-0";
+          accordionItem.setAttribute("data-exercise-id", exercise.exerciseId);
+          // Create the accordion header
+          const accordionHeader = document.createElement("h3");
+          accordionHeader.className = "accordion-fitflex accordion-header bg-fitflex-secondary text-fitflex-light-contrast";
+          accordionHeader.id = `heading${exerciseItemId}`;
+          // Create the accordion button
+          const accordionButton = document.createElement("button");
+          accordionButton.className = "accordion-fitflex accordion-button collapsed px-2 exercise-title";
+          accordionButton.type = "button";
+          accordionButton.setAttribute("data-bs-toggle", "collapse");
+          accordionButton.setAttribute("data-bs-target", `#collapse${exerciseItemId}`);
+          accordionButton.setAttribute("aria-expanded", "false");
+          accordionButton.setAttribute("aria-controls", `collapse${exerciseItemId}`);
+          accordionButton.innerText = exercise.exerciseName;
+          // Create the accordion collapse
+          const accordionCollapse = document.createElement("div");
+          accordionCollapse.className = "accordion-fitflex accordion-collapse collapse";
+          accordionCollapse.id = `collapse${exerciseItemId}`;
+          accordionCollapse.setAttribute("aria-labelledby", `heading${exerciseItemId}`);
+          accordionCollapse.setAttribute("data-bs-parent", `#exercisesAccordion${categoryId}`);
+          // Create the accordion body
+          const accordionBody = document.createElement("div");
+          accordionBody.className = "accordion-fitflex accordion-body bg-fitflex-light text-fitflex-dark";
+          // Add the exercise image
+          const exerciseImage = document.createElement("img");
+          exerciseImage.src = exercise.imageUrl;
+          exerciseImage.alt = exercise.exerciseName;
+          exerciseImage.className = "img-fluid mb-2";
+          accordionBody.appendChild(exerciseImage);
+          // Add the exercise instruction
+          const exerciseInstruction = document.createElement("p");
+          exerciseInstruction.innerText = exercise.instruction;
+          accordionBody.appendChild(exerciseInstruction);
+          // Create a div to contain the buttons and align them horizontally
+          const buttonsContainer = document.createElement("div");
+          buttonsContainer.className = "d-flex justify-content-around";
+          // Add the 'Mark as Complete' button
+          const completeButton = document.createElement("button");
+          completeButton.className = "btn btn-fitflex-primary";
+          completeButton.innerText = "Mark as Complete";
+          completeButton.addEventListener("click", markAsComplete);
+          buttonsContainer.appendChild(completeButton);
+          const exerciseVideoButton = document.createElement("a");
+          exerciseVideoButton.href = exercise.videoUrl;
+          exerciseVideoButton.target = "_blank"; // This makes the link open in a new tab
+          exerciseVideoButton.className = "btn btn-fitflex-primary";
+          exerciseVideoButton.innerText = "View Exercise Video";
+          buttonsContainer.appendChild(exerciseVideoButton);
+
+          // Add the 'Edit' button
+          const editButton = document.createElement("button");
+          editButton.className = "btn btn-fitflex-primary";
+          editButton.innerText = "Edit";
+          editButton.addEventListener("click", function() {
+            editExercise(exercise);
+            showSection("editExerciseSection", "none");
+          });
+          buttonsContainer.appendChild(editButton);
+
+          // Build the accordion item structure
+          accordionHeader.appendChild(accordionButton);
+          accordionItem.appendChild(accordionHeader);
+          accordionItem.appendChild(accordionCollapse);
+          accordionCollapse.appendChild(accordionBody);
+          exercisesAccordion.appendChild(accordionItem);
+          // Add the button container to the accordion body
+          accordionBody.appendChild(buttonsContainer);
+        });
+        // Add the exercises accordion to the corresponding category content
+        categoryContent.appendChild(exercisesAccordion);
+      }
+    }
+
+     
+
+     
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // Mark as complete
+    //
+    ///////////////////////////////////////////////////////////////
+
+    function markAsComplete(e) {
+      const exerciseAccordion = e.target.closest(".accordion-item");
+      const exerciseTitle = exerciseAccordion.querySelector(".exercise-title");
+      exerciseTitle.textContent += " - done";
+      exerciseTitle.style.textDecoration = "line-through";
+      exerciseTitle.classList.add("text-muted", "fst-italic"); // Add Bootstrap classes for grey text and italics
+      // Get the exercise ID from the parent accordion item
+      const exerciseId = exerciseAccordion.dataset.exerciseId;
+      // Prepare progress data
+      const now = new Date();
+      const progressData = {
+        dateTime: now.toISOString(),
+        exerciseId: exerciseId,
+      };
+      // Call the server-side function to save progress data
+      google.script.run.addProgress(progressData);
+      // Hide the collapse
+      // $(exerciseAccordion).collapse("hide");
+      // Get the collapse element and collapse it using Bootstrap 5 native method
+      const collapseElement = exerciseAccordion.querySelector(".accordion-collapse");
+      const collapseInstance = new bootstrap.Collapse(collapseElement);
+      collapseInstance.hide();
+    }
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // Progress data functions
+    //
+    ///////////////////////////////////////////////////////////////
+
+    function saveProgressData(progressData) {
+      const existingProgress = JSON.parse(localStorage.getItem("progress")) || [];
+      existingProgress.push(progressData);
+      localStorage.setItem("progress", JSON.stringify(existingProgress));
+    }
+
+    function removeProgressData(exerciseId) {
+      const existingProgress = JSON.parse(localStorage.getItem("progress")) || [];
+      const updatedProgress = existingProgress.filter(p => p.exerciseId !== exerciseId);
+      localStorage.setItem("progress", JSON.stringify(updatedProgress));
+    }
+
+    // Fetch progress data
+    function loadProgress(callback) {
+      google.script.run.withSuccessHandler(callback).fetchProgress();
+    }
+
+    function handleProgress(progressData) {
+      if (!progressData || !Array.isArray(progressData)) {
+        return;
+      }
+      progressData.sort((a, b) => {
+        const dateA = new Date(a.date.split(', ')[0].split('/').reverse().join('/') + ' ' + a.date.split(', ')[1]);
+        const dateB = new Date(b.date.split(', ')[0].split('/').reverse().join('/') + ' ' + b.date.split(', ')[1]);
+        return dateB - dateA;
+      });
+
+      const progressTrackingSection = document.getElementById("progressTrackingSection");
+      const progressTable = document.createElement("table");
+      progressTable.className = "table table-fitflex bg-fitflex-secondary text-fitflex-light-contrast";
+      progressTable.setAttribute("id","progressTable");
+      const thead = document.createElement("thead");
+      const tr = document.createElement("tr");
+      const thDate = document.createElement("th");
+      thDate.scope = "col";
+      thDate.className = "fw-normal"; 
+      thDate.textContent = "Date";
+      const thCategory = document.createElement("th");
+      thCategory.scope = "col";
+      thCategory.className = "fw-normal"; 
+      thCategory.textContent = "Category";
+      const thExerciseName = document.createElement("th");
+      thExerciseName.scope = "col";
+      thExerciseName.className = "fw-normal"; 
+      thExerciseName.textContent = "Exercise Name";
+      tr.appendChild(thDate);
+      tr.appendChild(thCategory);
+      tr.appendChild(thExerciseName);
+      thead.appendChild(tr);
+      progressTable.appendChild(thead);
+      const tbody = document.createElement("tbody");
+      progressData.forEach((progress) => {
+        const tr = document.createElement("tr");
+        tr.className = "bg-fitflex-light-contrast text-fitflex-dark";
+        const tdDate = document.createElement("td");
+        const date = new Date(progress.date.split(', ')[0].split('/').reverse().join('/') + ' ' + progress.date.split(', ')[1]);
+        tdDate.textContent = date.toLocaleString("en-GB", {weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric'});
+        const exercise = getExerciseById(progress.exerciseId);
+        const tdCategory = document.createElement("td");
+        tdCategory.textContent = getCategoryNameById(exercise.categoryId);
+        const tdExerciseName = document.createElement("td");
+        tdExerciseName.textContent = exercise.exerciseName;
+        tr.appendChild(tdDate);
+        tr.appendChild(tdCategory);
+        tr.appendChild(tdExerciseName);
+        tbody.appendChild(tr);
+      });
+      progressTable.appendChild(tbody);
+      // progressTrackingSection.innerHTML = "";
+      progressTrackingSection.appendChild(progressTable);
+      // Initialize the DataTables plugin
+      if ($.fn.DataTable.isDataTable("#progressTable")) {
+        $("#progressTable").DataTable().destroy();
+      }
+      $("#progressTable").DataTable({
+        pageLength: 25
+      });
+    }
+
+
+    function displayStatistics() {
+      const statisticsSection = document.getElementById("statistics");
+      statisticsSection.innerHTML = ""; // clear the statistics section before appending the table
+
+      // Fetch statistics data
+      function loadStatistics(callback) {
+        google.script.run.withSuccessHandler(callback).fetchStatistics();
+      }
+
+      function handleStatistics(statisticsData) {
+        if (!statisticsData || !Array.isArray(statisticsData)) {
+          return;
+        }
+
+        const statisticsTable = document.createElement("table");
+        statisticsTable.className = "table table-fitflex bg-fitflex-secondary text-fitflex-light-contrast";
+        statisticsTable.setAttribute("id","statisticsTable");
+        const thead = document.createElement("thead");
+        const tr = document.createElement("tr");
+        const thCategoryName = document.createElement("th");
+        thCategoryName.scope = "col";
+        thCategoryName.className = "fw-normal"; 
+        thCategoryName.textContent = "Category Name";
+        const thExerciseName = document.createElement("th");
+        thExerciseName.scope = "col";
+        thExerciseName.className = "fw-normal"; 
+        thExerciseName.textContent = "Exercise Name";
+        const thTotal = document.createElement("th");
+        thTotal.scope = "col";
+        thTotal.className = "fw-normal"; 
+        thTotal.textContent = "Total";
+        tr.appendChild(thCategoryName);
+        tr.appendChild(thExerciseName);
+        tr.appendChild(thTotal);
+        thead.appendChild(tr);
+        statisticsTable.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        statisticsData.forEach((statistics) => {
+          const tr = document.createElement("tr");
+          tr.className = "bg-fitflex-light-contrast text-fitflex-dark";
+          const tdCategoryName = document.createElement("td");
+          tdCategoryName.textContent = statistics.categoryName;
+          const tdExerciseName = document.createElement("td");
+          tdExerciseName.textContent = statistics.exerciseName;
+          const tdTotal = document.createElement("td");
+          tdTotal.textContent = statistics.total;
+          tr.appendChild(tdCategoryName);
+          tr.appendChild(tdExerciseName);
+          tr.appendChild(tdTotal);
+          tbody.appendChild(tr);
+        });
+        statisticsTable.appendChild(tbody);
+        statisticsSection.appendChild(statisticsTable);
+        // Initialize the DataTables plugin
+        if ($.fn.DataTable.isDataTable("#statisticsTable")) {
+          $("#statisticsTable").DataTable().destroy();
+        }
+        $("#statisticsTable").DataTable({
+          pageLength: 20
+        });
+      }
+
+      // Load statistics data and display table
+      loadStatistics(handleStatistics);
+    }
+
+
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // Show and hide sections
+    //
+    ///////////////////////////////////////////////////////////////
+
+    // Define the showSection function outside of the DOMContentLoaded event
+    function showSection(sectionId, categoryAccordionDisplay) {
+      const allSections = document.querySelectorAll("[id$='Section']");
+      allSections.forEach((section) => {
+        section.style.display = section.id === sectionId ? "block" : "none";
+      });
+      document.getElementById("categoryAccordion").style.display = categoryAccordionDisplay;
+    }
+
+    function showAddExerciseSection() {
+      // Hide all sections
+      document.getElementById("categoryAccordion").style.display = "none";
+      document.getElementById("progressTrackingSection").style.display = "none";
+      document.getElementById("workoutGeneratorSection").style.display = "none";
+
+      // Show the Add Exercise section
+      document.getElementById("addExerciseSection").style.display = "block";
+
+      // Populate the category options
+      populateCategoryOptions();
+    }
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // Link exercises to categories
+    //
+    ///////////////////////////////////////////////////////////////
+
+    function mapExercisesToCategories() {
+      exerciseCategoryMapping = exercises.reduce((acc, exercise) => {
+        const category = categories.find(cat => cat.categoryId === exercise.categoryId);
+        if (category) {
+          acc[exercise.exerciseId] = category.categoryName;
+        }
+        return acc;
+      }, {});
+    }
+
+    function getCategoryNameById(id) {
+      const category = categories.find((cat) => cat.categoryId === id);
+      return category ? category.categoryName : "Unknown";
+    }
+
+    function getExerciseById(id) {
+      return exercises.find((ex) => ex.exerciseId === id) || {};
+    }
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // Generate Workout
+    //
+    ///////////////////////////////////////////////////////////////
+
+    // Check status of checkbox when generate workout is clicked
+    document.getElementById("generateWorkoutButton").addEventListener("click", () => {
+      const isWeighted = document.getElementById("weightedWorkout").checked;
+      const isCompleted = document.getElementById("completedWorkout").checked;
+      if (isWeighted) {
+        generateWeightedWorkout();
+      } else if (isCompleted) {
+        generateWorkoutByCompletion();
+      } else {
+        generateRandomWorkout();
+      }
+    });
+
+    function generateRandomWorkout() {
+      const workoutList = document.getElementById("workoutList");
+      workoutList.innerHTML = ""; // Clear the previous workout list
+
+      // Get the selected category
+      const selectedCategory = document.getElementById("categorySelect").value;
+
+      // Get the selected number of exercises
+      const numExercisesSelect = document.getElementById("numExercisesSelect");
+      const selectedNumExercises = numExercisesSelect.value;
+
+      // Convert selectedCategory to an integer if it's not "all"
+      const selectedCategoryInt = selectedCategory === "all" ? "all" : parseInt(selectedCategory);
+
+      // Filter exercises based on the selected category
+      const filteredExercises = exercises.filter((exercise) =>
+        selectedCategoryInt === "all" ? true : exercise.categoryId === selectedCategoryInt
+      );
+
+      numberOfExercises = selectedNumExercises === "all" ? filteredExercises.length : parseInt(selectedNumExercises);
+      const selectedExercises = [];
+
+      // Add a check to prevent duplicates if there are enough exercises to choose from
+      if (filteredExercises.length >= numberOfExercises) {
+        for (let i = 0; i < numberOfExercises; i++) {
+          let randomIndex;
+          let exercise;
+
+          do {
+            randomIndex = Math.floor(Math.random() * filteredExercises.length);
+            exercise = filteredExercises[randomIndex];
+          } while (selectedExercises.some(selected => selected.exerciseName === exercise.exerciseName));
+
+          const category = getCategoryNameById(exercise.categoryId);
+
+          selectedExercises.push({
+            exerciseName: exercise.exerciseName,
+            categoryName: category,
+          });
+        }
+      } else {
+        // If there are not enough unique exercises, just use the available exercises
+        for (let i = 0; i < filteredExercises.length; i++) {
+          const exercise = filteredExercises[i];
+          const category = getCategoryNameById(exercise.categoryId);
+
+          selectedExercises.push({
+            exerciseName: exercise.exerciseName,
+            categoryName: category,
+          });
+        }
+      }
+
+      const ul = document.createElement("ul");
+      ul.className = "list-group";
+
+      selectedExercises.forEach((exercise) => {
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex justify-content-between align-items-center list-group-fitflex";
+
+        const exerciseText = document.createElement("span");
+        exerciseText.textContent = `${exercise.exerciseName} (${exercise.categoryName})`;
+        li.appendChild(exerciseText);
+
+        const completeButton = document.createElement("button");
+        completeButton.className = "btn btn-sm btn-fitflex-secondary workout-generator-complete";
+        completeButton.textContent = "Mark as Complete";
+        completeButton.addEventListener("click", toggleWorkoutCompletion);
+        li.appendChild(completeButton);
+
+        ul.appendChild(li);
+      });
+
+      workoutList.appendChild(ul);
+    }
+
+    function generateWorkoutByCompletion(){
+      google.script.run.withSuccessHandler(handleStatisticsForCompleted).fetchProgress();
+    };
+
+    function handleStatisticsForCompleted(fetchedProgress, exercises){
+      // Calculate the number of times each exercise has been completed
+      const exerciseCounts = {};
+      fetchedProgress.forEach(progress => {
+        const exerciseId = progress.exerciseId;
+        exerciseCounts[exerciseId] = (exerciseCounts[exerciseId] || 0) + 1;
+      });
+
+      // Convert the exercise counts object to an array of objects
+      const exerciseCountsArray = Object.keys(exerciseCounts).map(exerciseId => ({
+        exerciseId,
+        count: exerciseCounts[exerciseId]
+      }));
+
+      // Sort the exercise counts in ascending order
+      exerciseCountsArray.sort((a, b) => a.count - b.count);
+
+      // Map the exercise counts array to an array of [exerciseId, count] arrays
+      const result = exerciseCountsArray.map(obj => parseInt(obj.exerciseId));
+      console.log("sorted fetchedProgress: ", result); // Log the sorted data
+      // return result;
+
+      // Display the workout
+      console.log("result: ", result);
+      displayWorkout(result, exercises);
+    }
+
+    function generateWeightedWorkout() {
+
+      // Retrieve the user's exercise completion history
+      loadProgress(function(progressHistoryData) {
+        // console.log("progressHistoryData", progressHistoryData);
+        // Calculate the frequency of each exercise in the user's history
+        const exerciseFrequencies = calculateExerciseFrequencies(progressHistoryData);
+
+        // Assign a weight to each exercise based on its frequency in the user's history
+        const exerciseWeights = calculateExerciseWeights(exerciseFrequencies);
+
+        // Create a probability distribution based on these weights
+        const exerciseProbabilities = calculateExerciseProbabilities(exerciseWeights);
+
+        // Generate the workout using the weighted probabilities
+        const workout = generateWeightedWorkoutFromProbabilities(exerciseProbabilities, exercises);
+
+        // Display the workout
+        // displayWorkout(workout);
+      });
+
+        function calculateExerciseFrequencies(progressHistoryData) {
+          const exerciseFrequencies = {};
+          progressHistoryData.forEach((progress) => {
+            const exerciseId = progress.exerciseId;
+            if (!exerciseFrequencies[exerciseId]) {
+              exerciseFrequencies[exerciseId] = 0;
+            }
+            exerciseFrequencies[exerciseId]++;
+          });
+          // console.log("exerciseFrequencies", exerciseFrequencies);
+          return exerciseFrequencies;
+        }
+
+        function calculateExerciseWeights(exerciseFrequencies) {
+          const exerciseWeights = {};
+          const totalExercises = Object.values(exerciseFrequencies).reduce((a, b) => a + b, 0);
+          Object.keys(exerciseFrequencies).forEach((exerciseId) => {
+            const frequency = exerciseFrequencies[exerciseId];
+            const weight = 1 / frequency;
+            exerciseWeights[exerciseId] = weight;
+          });
+          // console.log("exerciseWeights", exerciseWeights);
+          return exerciseWeights;
+        }
+
+        function calculateExerciseProbabilities(exerciseWeights) {
+          const weightSum = Object.values(exerciseWeights).reduce((a, b) => a + b);
+          const exerciseProbabilities = {};
+          Object.keys(exerciseWeights).forEach((exerciseId) => {
+            exerciseProbabilities[exerciseId] = exerciseWeights[exerciseId] / weightSum;
+          });
+          // console.log("exerciseProbabilities", exerciseProbabilities);
+          return exerciseProbabilities;
+        }
+
+        function generateWeightedWorkoutFromProbabilities(exerciseProbabilities, exercises) {
+          // console.log("exercises: ", exercises);
+          // Create a weighted array of all exercises based on probabilities
+          const weightedExercises = [];
+          for (const exerciseId in exerciseProbabilities) {
+            const probability = exerciseProbabilities[exerciseId];
+            for (let i = 0; i < probability; i++) {
+              weightedExercises.push(parseInt(exerciseId));
+            }
+          }
+
+          // Shuffle the array to add some randomness
+          weightedExercises.sort(() => Math.random() - 0.5);
+
+          // Generate the workout by selecting exercises from the weighted array
+          const workout = [];
+          const numExercises = Math.floor(Math.random() * 6) + 5; // Generate between 1 and 5 exercises
+          let lastExerciseId = null;
+          for (let i = 0; i < numExercises; i++) {
+            // Select a random exercise from the weighted array
+            let exerciseId;
+            do {
+              const exerciseIndex = Math.floor(Math.random() * weightedExercises.length);
+              exerciseId = weightedExercises[exerciseIndex];
+            } while (exerciseId === lastExerciseId); // make sure it's not the same exercise as the last one
+            workout.push(exerciseId);
+            lastExerciseId = exerciseId;
+          }
+
+          displayWorkout(workout);
+
+        }
+
+      };
+
+      function displayWorkout(workout) {
+        console.log("workout data: ", workout);
+        const workoutList = document.createElement("ul");
+        workoutList.className = "list-group";
+        for (const exerciseId of workout) {
+          const exercise = exercises.find((exercise) => exercise.exerciseId === exerciseId);
+          const exerciseName = exercise.exerciseName;
+          const exerciseListItem = document.createElement("li");
+          exerciseListItem.className = "list-group-item d-flex justify-content-between align-items-center list-group-fitflex";  
+          const exerciseText = document.createElement("span");
+          exerciseText.textContent = exerciseName;
+          exerciseListItem.appendChild(exerciseText); // append the span element
+          const completeButton = document.createElement("button");
+          completeButton.className = "btn btn-sm btn-fitflex-secondary workout-generator-complete";
+          completeButton.textContent = "Mark as Complete";
+          completeButton.addEventListener("click", toggleWorkoutCompletion);
+          exerciseListItem.appendChild(completeButton); // append the button to the li
+          workoutList.appendChild(exerciseListItem);
+        }
+        const workoutContainer = document.getElementById("workoutList");
+        workoutContainer.innerHTML = "";
+        workoutContainer.appendChild(workoutList);
+      }
+
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // Mark as complete
+    //
+    ///////////////////////////////////////////////////////////////
+
+    function toggleWorkoutCompletion(event) {
+      const completeButton = event.target;
+      const listItem = completeButton.closest("li");
+      const exerciseText = listItem.querySelector("span");
+      if (exerciseText) {
+        exerciseText.classList.toggle("completed");
+        completeButton.textContent = exerciseText.classList.contains("completed") ? "Mark as Incomplete" : "Mark as Complete";
+      }
+    }
+
+    function markAsCompleteWorkoutGenerator(e) {
+      const listItem = e.target.closest(".list-group-item");
+      listItem.style.textDecoration = "line-through";
+      listItem.style.opacity = "0.5";
+
+      // Get the exercise ID from the exercise name
+      const exerciseName = listItem.querySelector("span").textContent.split(" (")[0];
+      const exercise = exercises.find((exercise) => exercise.exerciseName === exerciseName);
+      const exerciseId = exercise.exerciseId;
+
+      // Prepare progress data
+      const now = new Date();
+      const progressData = {
+        dateTime: now.toISOString(),
+        exerciseId: exerciseId,
+      };
+
+      // Call the server-side function to save progress data
+      google.script.run.addProgress(progressData);
+    }
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // Add new exercise
+    //
+    ///////////////////////////////////////////////////////////////
+
+    function saveNewExercise() {
+      const exerciseName = document.getElementById("exerciseName").value;
+      const exerciseCategory = document.getElementById("exerciseCategory").value;
+      const exerciseInstruction = document.getElementById("exerciseInstruction").value;
+      const exerciseImageUrl = document.getElementById("exerciseImageUrl").value;
+      const exerciseVideoUrl = document.getElementById("exerciseVideoUrl").value;
+
+      const newExercise = {
+        exerciseName: exerciseName,
+        categoryId: exerciseCategory,
+        instruction: exerciseInstruction,
+        imageUrl: exerciseImageUrl,
+        videoUrl: exerciseVideoUrl,
+      };
+
+      // Call the server-side function to save the new exercise
+      google.script.run.addExercise(newExercise);
+
+      // Clear the form fields
+      document.getElementById("addExerciseForm").reset();
+    }
+
+    document.getElementById("saveExerciseButton").addEventListener("click", saveNewExercise);
+
+    document.getElementById("addExerciseButton").addEventListener("click", showAddExerciseSection);
+
+    document.getElementById("saveEditedExerciseButton").addEventListener("click", saveEditedExercise);
+    ///////////////////////////////////////////////////////////////
+    //
+    // Edit exercise
+    //
+    ///////////////////////////////////////////////////////////////
+    function editExercise(exercise) {
+      console.log(exercise);
+      document.getElementById("editExerciseName").value = exercise.exerciseName;
+      document.getElementById("editExerciseInstruction").value = exercise.instruction;
+      document.getElementById("editExerciseImageUrl").value = exercise.imageUrl;
+      document.getElementById("editExerciseVideoUrl").value = exercise.videoUrl;
+      // Set other form input values as needed, based on the exercise object's properties
+
+      // You may also want to store the exercise ID in a hidden input field, so you can use it later when updating the exercise
+      const editExerciseId = document.getElementById("editExerciseId");
+      console.log("editExerciseId", editExerciseId);if (!editExerciseId) {
+        const hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.id = "editExerciseId";
+        hiddenInput.name = "editExerciseId";
+        document.getElementById("editExerciseForm").appendChild(hiddenInput);
+      }
+      document.getElementById("editExerciseId").value = exercise.exerciseId;
+
+      // You may also want to store the category ID in a hidden input field, so you can use it later when updating the exercise
+      const editCategoryId = document.getElementById("editCategoryId");
+      if (!editExerciseId) {
+        const hiddenCategoryInput = document.createElement("input");
+        hiddenCategoryInput.type = "hidden";
+        hiddenCategoryInput.id = "editCategoryId";
+        hiddenCategoryInput.name = "editCategoryId";
+        document.getElementById("editExerciseForm").appendChild(hiddenCategoryInput);
+      }
+      document.getElementById("editCategoryId").value = exercise.categoryId;
+    }
+
+    function saveEditedExercise() {
+       const exercise = {
+        id: document.getElementById("editExerciseId").value,
+        exerciseName: document.getElementById("editExerciseName").value,
+        categoryId: document.getElementById("editCategoryId").value,
+        instruction: document.getElementById("editExerciseInstruction").value,
+        imageUrl: document.getElementById("editExerciseImageUrl").value,
+        videoUrl: document.getElementById("editExerciseVideoUrl").value
+      };
+
+      // Update the exercise on the server side
+      google.script.run.withSuccessHandler(function() {
+        // Close the edit exercise section and refresh the exercise list
+        // document.getElementById("editExerciseSection").style.display = "none";
+        // loadExercises();
+        // Click the All Exercises button
+        document.getElementById("showCategories").click();
+      }).updateExercise(exercise);
+    }
+
+    function createFormGroup(inputId, label) {
+      const formGroup = document.createElement("div");
+      formGroup.className = "mb-3";
+      const formLabel = document.createElement("label");
+      formLabel.for = inputId;
+      formLabel.innerText = label;
+      const formInput = document.createElement("input");
+      formInput.type = "text";
+      formInput.className = "form-control";
+      formInput.id = inputId;
+      formGroup.appendChild(formLabel);
+      formGroup.appendChild(formInput);
+      return formGroup;
+    }
+
+    function createChart(data) {
+      google.script.run.withSuccessHandler(drawChart).fetchChartStatistics();
+      google.script.run.withSuccessHandler(drawPieChart).fetchStatistics();
+    }
+
+    // Declare chart variable
+    var myChart;
+    var myPieChart;
+
+    function drawChart(data) {
+      console.log("bar data: ", data); // Add this line to inspect the data
+
+      // Destroy existing chart if it exists
+      if (myChart) {
+        myChart.destroy();
+      }
+
+      // Create new chart
+      var ctx = document.getElementById("myChart").getContext("2d");
+      myChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: "Total",
+            data: data.values,
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            borderColor: "rgba(54, 162, 235, 1)",
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+      });
+    }
+
+    function drawPieChart(data) {
+      const pieData = aggregateDataByCategory(data);
+
+      console.log("pie data: ", pieData); // Add this line to inspect the data
+
+      // Destroy existing chart if it exists
+      if (myPieChart) {
+        myPieChart.destroy();
+      }
+      // Create new chart
+        const ctx = document.getElementById("myPieChart").getContext("2d");
+        const labels = pieData.map((item) => item.categoryName);
+        const values = pieData.map((item) => item.total);
+        const colors = [
+          "rgba(255, 99, 132, 0.2)",
+          "rgba(54, 162, 235, 0.2)",
+          "rgba(255, 206, 86, 0.2)",
+          "rgba(75, 192, 192, 0.2)",
+          "rgba(153, 102, 255, 0.2)",
+          "rgba(255, 159, 64, 0.2)",
+        ];
+        const borderColors = [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(75, 192, 192, 1)",
+          "rgba(153, 102, 255, 1)",
+          "rgba(255, 159, 64, 1)",
+        ];
+        myPieChart = new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                data: values,
+                backgroundColor: colors,
+                borderColor: borderColors,
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {},
+        });
+    }
+
+    function aggregateDataByCategory(data) {
+      const aggregatedData = data.reduce((acc, item) => {
+        const categoryName = item.categoryName;
+        const total = item.total;
+
+        if (acc[categoryName]) {
+          acc[categoryName] += total;
+        } else {
+          acc[categoryName] = total;
+        }
+
+        return acc;
+      }, {});
+
+      return Object.entries(aggregatedData).map(([categoryName, total]) => ({
+        categoryName,
+        total,
+      }));
+    }
+
+    function updateChart() {
+      var category = document.getElementById("category").value;
+      google.script.run.withSuccessHandler(drawChart).fetchChartStatistics(category);
+    }
+
+
+
+    ///////////////////////////////////////////////////////////////
+    //
+    // Add event listeners once DOM content is loaded
+    //
+    ///////////////////////////////////////////////////////////////
+
+    document.addEventListener("DOMContentLoaded", function () {
+      loadCategories()
+        .then(loadExercises)
+        .then(() => {
+          mapExercisesToCategories();
+          loadProgress();
+        });
+
+      // Set event listeners for navigation buttons
+      document.getElementById("showWorkoutGenerator").addEventListener("click", () => {
+        showSection("workoutGeneratorSection", "none");
+      });
+
+    document.getElementById("showProgressTracking").addEventListener("click", () => {
+        showSection("progressTrackingSection", "none");
+        Promise.all([loadProgress(handleProgress), displayStatistics()])
+        .then(() => {
+          console.log("Tables loaded successfully!");
+        })
+        .catch((error) => {
+          console.error("Error loading tables:", error);
+        });
+      });
+
+      document.getElementById("showCategories").addEventListener("click", () => {
+        showSection("", "block"); // Show the category accordion and hide the other sections
+      });
+
+      document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("workout-generator-complete")) {
+          markAsCompleteWorkoutGenerator(e);
+        }
+      });
+
+      // Set event listeners for navigation buttons
+      document.getElementById("showChartsButton").addEventListener("click", () => {
+        createChart();
+        showSection("chartsSection", "none");
+      });
+    });
+
+  </script>
+
+</head>
+
+</html>
